@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"reflect"
 
-	. "github.com/krave-n/go/handling"
-	"github.com/krave-n/go/rest"
+	. "github.com/gotgo/gokn/handling"
+	"github.com/gotgo/gokn/rest"
 	"github.com/gotgo/fw/tracing"
 
 	. "github.com/onsi/ginkgo"

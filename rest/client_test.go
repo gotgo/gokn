@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/krave-n/go/rest"
-	"github.com/krave-n/go/testing"
+	"github.com/gotgo/gokn/rest"
+	"github.com/gotgo/gokn/testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

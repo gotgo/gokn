@@ -1,7 +1,7 @@
 package rest_test
 
 import (
-	. "github.com/krave-n/go/rest"
+	. "github.com/gotgo/gokn/rest"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

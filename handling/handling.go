@@ -3,7 +3,7 @@ package handling
 import (
 	"net/http"
 
-	"github.com/krave-n/go/rest"
+	"github.com/gotgo/gokn/rest"
 )
 
 type BindingFunc func(rest.HandlerFunc) func(*rest.Request, rest.Responder)

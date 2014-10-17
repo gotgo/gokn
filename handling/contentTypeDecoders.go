@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"reflect"
 
-	"github.com/krave-n/go/rest"
 	"github.com/gotgo/fw/tracing"
-	"github.com/krave-n/go/util"
+	"github.com/gotgo/fw/util"
+	"github.com/gotgo/gokn/rest"
 )
 
 type ContentTypeDecoders struct {

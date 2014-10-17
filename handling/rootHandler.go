@@ -12,7 +12,7 @@ import (
 	"strconv"
 
 	"github.com/gotgo/fw/logging"
-	"github.com/krave-n/go/rest"
+	"github.com/gotgo/gokn/rest"
 	"github.com/gotgo/fw/tracing"
 )
 
