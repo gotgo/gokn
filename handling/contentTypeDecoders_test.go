@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"reflect"
 
+	"github.com/gotgo/fw/tracing"
 	. "github.com/gotgo/gokn/handling"
 	"github.com/gotgo/gokn/rest"
-	"github.com/gotgo/fw/tracing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -44,11 +44,10 @@ var _ = Describe("ContentTypeDecoder", func() {
 		resource = &rest.ResourceDef{
 			ResourceT:   "/decodeMe",
 			RequestBody: reflect.TypeOf(RequestBody{}),
-			Headers:     []string{"GET"},
+			Verb:        "GET",
 		}
-
 		request = &rest.Request{
-			Definition: &rest.ResourceSpec{Definition: resource},
+			Definition: rest.NewServerResource(resource, nil, nil),
 			Raw: &http.Request{
 				Header: make(http.Header),
 			},

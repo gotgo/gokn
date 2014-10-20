@@ -116,14 +116,15 @@ func (th *TestHandler) Patch(req *rest.Request, resp rest.Responder) {
 	th.setResponse(resp)
 }
 
-func getSpec(resourceT string, verbs ...string) rest.ServerResource {
+func getSpec(resourceT string, verb string) rest.ServerResource {
 	def := &rest.ResourceDef{
 		ResourceT:    resourceT,
-		Verbs:        verbs,
+		Verb:         verb,
 		RequestBody:  reflect.TypeOf([]byte{}),
 		ResponseBody: reflect.TypeOf([]byte{}),
 	}
-	return &rest.ResourceSpec{Definition: def}
+	ct := []string{"application/json"}
+	return rest.NewServerResource(def, ct, ct)
 }
 
 var _ = Describe("RootHandler", func() {
@@ -204,8 +205,10 @@ var _ = Describe("RootHandler", func() {
 			Expect(len(router.Handlers)).To(Equal(1))
 		})
 		It("should bind to all verbs in one go", func() {
-			spec := getSpec("/test", "GET", "POST", "PUT", "DELETE", "HEAD", "PATCH")
-			root.Bind(router, spec, handler, "")
+			verbs := []string{"GET", "POST", "PUT", "DELETE", "HEAD", "PATCH"}
+			for _, verb := range verbs {
+				root.Bind(router, getSpec("/test", verb), handler, "")
+			}
 			Expect(router.RegisterCount).To(Equal(6))
 			Expect(router.GetCount).To(Equal(1))
 			Expect(router.PostCount).To(Equal(1))
@@ -270,11 +273,11 @@ var _ = Describe("RootHandler", func() {
 			})
 			def := &rest.ResourceDef{
 				ResourceT: "willfail",
-				Verbs:     []string{"GET"},
+				Verb:      "GET",
 			}
 
-			contentType := []string{"fail"}
-			spec := rest.NewResourceSpec(def, contentType, contentType)
+			ct := []string{"fail"}
+			spec := rest.NewServerResource(def, ct, ct)
 			root.Bind(router, spec, handler, "")
 			router.Handlers[0](writer, request)
 			Expect(writer.WriteHeaderCode).To(Equal(http.StatusInternalServerError))
