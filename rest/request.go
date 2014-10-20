@@ -35,6 +35,7 @@ func (r *Request) ContentType() string {
 	return ""
 }
 
+// Bytes returns the body of the request as a []byte
 func (r *Request) Bytes() ([]byte, error) {
 	if r.bodyBytes == nil {
 		defer r.Raw.Body.Close()

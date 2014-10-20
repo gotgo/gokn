@@ -61,25 +61,16 @@ func (c *Client) Fetch(r *ClientRequest, ctx *RequestContext, v interface{}) (*E
 
 func (c *Client) Do(r *ClientRequest, ctx *RequestContext) (*EndpointResponse, error) {
 	tracer := ctx.Trace.NewRequest(resourceName(r), getArgs(r), r.Headers)
-
 	tracer.Begin()
 	defer tracer.End()
 
-	if resp, err := c.doRequest(r); err != nil {
-		tracer.Annotate(tracing.Error, "request", err)
-		return resp, err
-	} else {
-		//TODO: trace response body
-		return resp, nil
-	}
-}
-
-func (c *Client) doRequest(r *ClientRequest) (*EndpointResponse, error) {
 	client := new(http.Client)
 
 	if req, err := c.newHttpRequest(r); err != nil {
+		tracer.Annotate(tracing.Error, "request", err)
 		return nil, err
 	} else if resp, err := client.Do(req); err != nil {
+		tracer.Annotate(tracing.Error, "request", err)
 		return nil, err
 	} else {
 		resp := &EndpointResponse{
@@ -87,39 +78,6 @@ func (c *Client) doRequest(r *ClientRequest) (*EndpointResponse, error) {
 		}
 		return resp, nil
 	}
-}
-
-func resourceName(r *ClientRequest) string {
-	if r.Definition == nil {
-		return fmt.Sprintf("%s - %s", r.Verb, r.Resource)
-	} else {
-		return fmt.Sprintf("%s - %s", r.Verb, r.Definition.ResourceT)
-	}
-}
-
-func splitQueryPath(r string) (path, query string) {
-	parts := strings.Split(r, "?")
-	path = parts[0]
-	query = ""
-
-	if len(parts) == 2 {
-		query = parts[1]
-	} else if len(parts) > 2 {
-		panic("query portion of resource can't have more than one '?'")
-	}
-	return path, query
-}
-
-func (c *Client) endpoint() ResourceEndpoint {
-	i := randInt(0, len(c.Endpoints)-1)
-	return c.Endpoints[i]
-}
-
-func randInt(min int, max int) int {
-	if min == 0 && max == 0 {
-		return 0
-	}
-	return min + rand.Intn(max-min)
 }
 
 // newHttpRequest converts a ClientRequest into a http.Request
@@ -154,6 +112,39 @@ func (c *Client) newHttpRequest(cr *ClientRequest) (*http.Request, error) {
 	}
 
 	return req, nil
+}
+
+func splitQueryPath(r string) (path, query string) {
+	parts := strings.Split(r, "?")
+	path = parts[0]
+	query = ""
+
+	if len(parts) == 2 {
+		query = parts[1]
+	} else if len(parts) > 2 {
+		panic("query portion of resource can't have more than one '?'")
+	}
+	return path, query
+}
+
+func resourceName(r *ClientRequest) string {
+	if r.Definition == nil {
+		return fmt.Sprintf("%s - %s", r.Verb, r.Resource)
+	} else {
+		return fmt.Sprintf("%s - %s", r.Verb, r.Definition.ResourceT)
+	}
+}
+
+func (c *Client) endpoint() ResourceEndpoint {
+	i := randInt(0, len(c.Endpoints)-1)
+	return c.Endpoints[i]
+}
+
+func randInt(min int, max int) int {
+	if min == 0 && max == 0 {
+		return 0
+	}
+	return min + rand.Intn(max-min)
 }
 
 // marshal uses the Client.Encoder if it's not nil; otherwise,

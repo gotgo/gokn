@@ -1,178 +1,158 @@
 package rest
 
-import (
-	"bytes"
-	"fmt"
-	"html/template"
-	"net/url"
-	"reflect"
-	"strings"
-
-	"github.com/fatih/structs"
-)
-
 type ResourceSpec struct {
-	Definition           *ResourceDef
-	requestContentTypes  []string //TODO: Request & Response ContentTypes go on the spec or the definition?
-	responseContentTypes []string
-	compiledTemplate     *template.Template
+	defaultContentType []string
+	get                *ResourceDef
+	put                *ResourceDef
+	post               *ResourceDef
+	delete             *ResourceDef
+	patch              *ResourceDef
+	head               *ResourceDef
 }
 
-func NewResourceSpec(def *ResourceDef, reqContentTypes []string, respContentTypes []string) *ResourceSpec {
+func NewResourceSpec(defaultContentType string) *ResourceSpec {
 	return &ResourceSpec{
-		Definition:           def,
-		requestContentTypes:  reqContentTypes,
-		responseContentTypes: respContentTypes,
+		defaultContentType: []string{defaultContentType},
 	}
 }
 
-func (rsd *ResourceSpec) ResourceT() string {
-	return rsd.Definition.ResourceT
-}
-
-func (rsd *ResourceSpec) ResourceArgs() interface{} {
-	if rsd.Definition.ResourceArgs == nil {
-		return nil
-	} else {
-		return reflect.New(rsd.Definition.ResourceArgs).Interface()
+func (r *ResourceSpec) Use(def *ResourceDef) *ResourceSpec {
+	switch def.Verb {
+	case "GET":
+		r.get = def
+	case "POST":
+		r.post = def
+	case "PUT":
+		r.put = def
+	case "DELETE":
+		r.delete = def
+	case "HEAD":
+		r.head = def
+	case "PATCH":
+		r.patch = def
 	}
+	return r
 }
 
-func (rsd *ResourceSpec) Methods() []string {
-	return rsd.Definition.Verbs
-}
-
-func (rsd *ResourceSpec) Headers() []string {
-	return rsd.Definition.Headers
-}
-
-func (rsd *ResourceSpec) RequestBody() interface{} {
-	if rsd.Definition.RequestBody == nil {
-		return nil
-	} else {
-		//this returns an interface that is a pointer to a new instance of the datatype
-		res := reflect.New(rsd.Definition.RequestBody).Interface()
-		return res
+func (rs *ResourceSpec) ServeAll() []ServerResource {
+	ct := rs.defaultContentType
+	all := make([]ServerResource, 0)
+	if rs.get != nil {
+		all = append(all, NewServerResource(rs.get, ct, ct))
 	}
-}
 
-func (rsd *ResourceSpec) ResponseBody() interface{} {
-	if rsd.Definition.ResponseBody == nil {
-		return nil
-	} else {
-		//this returns an interface that is a pointer to a new instance of the datatype
-		return reflect.New(rsd.Definition.ResponseBody).Interface()
+	if rs.post != nil {
+		all = append(all, NewServerResource(rs.post, ct, ct))
 	}
-}
 
-func (rsd *ResourceSpec) RequestContentTypes() []string {
-	return rsd.requestContentTypes
-}
+	if rs.put != nil {
+		all = append(all, NewServerResource(rs.put, ct, ct))
+	}
 
-func (rsd *ResourceSpec) ResponseContentTypes() []string {
-	return rsd.responseContentTypes
+	if rs.delete != nil {
+		all = append(all, NewServerResource(rs.delete, ct, ct))
+	}
+
+	if rs.head != nil {
+		all = append(all, NewServerResource(rs.head, ct, ct))
+	}
+
+	if rs.patch != nil {
+		all = append(all, NewServerResource(rs.patch, ct, ct))
+	}
+	return all
 }
 
 // Client Behavior
 
-func (rd *ResourceSpec) path(args interface{}) string {
-	if args == nil {
-		return rd.ResourceT()
+func (rs *ResourceSpec) Get(args interface{}) *ClientRequest {
+	if rs.get == nil {
+		panic("get is nil")
 	}
 
-	rd.compile()
-	toClean := structs.Map(args)
-	clean := make(map[string]string)
-	for k, v := range toClean {
-		clean[k] = url.QueryEscape(fmt.Sprintf("%v", v))
-	}
-	buff := bytes.NewBufferString("")
-	rd.compiledTemplate.Execute(buff, clean)
-	return buff.String()
-}
-
-func (rd *ResourceSpec) compile() {
-	if rd.compiledTemplate == nil {
-		templateName := rd.ResourceT()
-		resourceT := rd.resourceAsTemplate()
-		compiled := template.Must(template.New(templateName).Parse(resourceT))
-		rd.compiledTemplate = compiled
-	}
-}
-
-// prepare converts the typical url template /url/{param} to the html.templates of
-// /url/{{.param}}
-func (rsd *ResourceSpec) resourceAsTemplate() string {
-	urlT := rsd.ResourceT()
-	halfway := strings.Replace(urlT, "{", "{{.", -1)
-	final := strings.Replace(halfway, "}", "}}", -1)
-	return final
-}
-
-func (rsd *ResourceSpec) Get(args interface{}) *ClientRequest {
-	path := rsd.path(args)
+	path := rs.get.GetPath(args)
 	req := &ClientRequest{
 		Resource:   path,
 		Verb:       "GET",
-		Definition: rsd,
+		Definition: NewServerResource(rs.get, rs.defaultContentType, rs.defaultContentType),
 	}
 	attachArgs(req, args)
 	return req
 }
 
-func (rsd *ResourceSpec) Post(args interface{}, body interface{}) *ClientRequest {
-	path := rsd.path(args)
+func (rs *ResourceSpec) Post(args interface{}, body interface{}) *ClientRequest {
+	if rs.post == nil {
+		panic("post is nil")
+	}
+
+	path := rs.post.GetPath(args)
 	req := &ClientRequest{
 		Resource:   path,
 		Verb:       "POST",
-		Definition: rsd,
+		Definition: NewServerResource(rs.post, rs.defaultContentType, rs.defaultContentType),
 		Body:       body,
 	}
 	attachArgs(req, args)
 	return req
 }
 
-func (rsd *ResourceSpec) Put(args interface{}, body interface{}) *ClientRequest {
-	path := rsd.path(args)
+func (rs *ResourceSpec) Put(args interface{}, body interface{}) *ClientRequest {
+	if rs.put == nil {
+		panic("put is nil")
+	}
+
+	path := rs.put.GetPath(args)
 	req := &ClientRequest{
 		Resource:   path,
 		Verb:       "PUT",
-		Definition: rsd,
+		Definition: NewServerResource(rs.put, rs.defaultContentType, rs.defaultContentType),
 		Body:       body,
 	}
 	attachArgs(req, args)
 	return req
 }
 
-func (rsd *ResourceSpec) Patch(args interface{}, body interface{}) *ClientRequest {
-	path := rsd.path(args)
+func (rs *ResourceSpec) Patch(args interface{}, body interface{}) *ClientRequest {
+	if rs.patch == nil {
+		panic("patch is nil")
+	}
+
+	path := rs.patch.GetPath(args)
 	req := &ClientRequest{
 		Resource:   path,
 		Verb:       "PATCH",
-		Definition: rsd,
+		Definition: NewServerResource(rs.patch, rs.defaultContentType, rs.defaultContentType),
 		Body:       body,
 	}
 	attachArgs(req, args)
 	return req
 }
 
-func (rsd *ResourceSpec) Delete(args interface{}) *ClientRequest {
-	path := rsd.path(args)
+func (rs *ResourceSpec) Delete(args interface{}) *ClientRequest {
+	if rs.delete == nil {
+		panic("delete is nil")
+	}
+
+	path := rs.delete.GetPath(args)
 	req := &ClientRequest{
 		Resource:   path,
-		Verb:       "Delete",
-		Definition: rsd,
+		Verb:       "DELETE",
+		Definition: NewServerResource(rs.delete, rs.defaultContentType, rs.defaultContentType),
 	}
 	attachArgs(req, args)
 	return req
 }
 
-func (rsd *ResourceSpec) Head(args interface{}) *ClientRequest {
-	path := rsd.path(args)
+func (rs *ResourceSpec) Head(args interface{}) *ClientRequest {
+	if rs.head == nil {
+		panic("head is nil")
+	}
+
+	path := rs.head.GetPath(args)
 	req := &ClientRequest{
 		Resource:   path,
 		Verb:       "HEAD",
-		Definition: rsd,
+		Definition: NewServerResource(rs.delete, rs.defaultContentType, rs.defaultContentType),
 	}
 	attachArgs(req, args)
 	return req

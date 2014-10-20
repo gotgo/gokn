@@ -12,8 +12,8 @@ import (
 	"strconv"
 
 	"github.com/gotgo/fw/logging"
-	"github.com/gotgo/gokn/rest"
 	"github.com/gotgo/fw/tracing"
+	"github.com/gotgo/gokn/rest"
 )
 
 // RootHandler binds api endpoint to a router
@@ -223,54 +223,53 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 }
 
 func (root *RootHandler) Bind(router SimpleRouter, endpoint rest.ServerResource, handler rest.Handler, resourceRoot string) {
-	for _, httpMethod := range endpoint.Methods() {
-		errMessage := "can't bind. method named %s is missing from type %s"
-		handlerName := reflect.TypeOf(handler).Name()
-		var fn rest.HandlerFunc
+	httpMethod := endpoint.Verb()
+	errMessage := "can't bind. method named %s is missing from type %s"
+	handlerName := reflect.TypeOf(handler).Name()
+	var fn rest.HandlerFunc
 
-		if httpMethod == "GET" {
-			if h, ok := handler.(rest.GetHandler); !ok {
-				panic(fmt.Sprintf(errMessage, httpMethod, handlerName))
-			} else {
-				fn = h.Get
-			}
-		} else if httpMethod == "POST" {
-			if h, ok := handler.(rest.PostHandler); !ok {
-				panic(fmt.Sprintf(errMessage, httpMethod, handlerName))
-			} else {
-				fn = h.Post
-			}
-		} else if httpMethod == "PUT" {
-			if h, ok := handler.(rest.PutHandler); !ok {
-				panic(fmt.Sprintf(errMessage, httpMethod, handlerName))
-			} else {
-				fn = h.Put
-			}
-		} else if httpMethod == "DELETE" {
-			if h, ok := handler.(rest.DeleteHandler); !ok {
-				panic(fmt.Sprintf(errMessage, httpMethod, handlerName))
-			} else {
-				fn = h.Delete
-			}
-		} else if httpMethod == "HEAD" {
-			if h, ok := handler.(rest.HeadHandler); !ok {
-				panic(fmt.Sprintf(errMessage, httpMethod, handlerName))
-			} else {
-				fn = h.Head
-			}
-		} else if httpMethod == "PATCH" {
-			if h, ok := handler.(rest.PatchHandler); !ok {
-				panic(fmt.Sprintf(errMessage, httpMethod, handlerName))
-			} else {
-				fn = h.Patch
-			}
+	if httpMethod == "GET" {
+		if h, ok := handler.(rest.GetHandler); !ok {
+			panic(fmt.Sprintf(errMessage, httpMethod, handlerName))
+		} else {
+			fn = h.Get
 		}
-
-		wrappedHandler := root.createHttpHandler(fn, endpoint, router.RequestArgs)
-		resourcePathT := path.Join(resourceRoot, endpoint.ResourceT())
-		router.RegisterRoute(httpMethod, resourcePathT, wrappedHandler)
-		root.Log.Inform(fmt.Sprintf("Bound endpoint %s %s", httpMethod, resourcePathT))
+	} else if httpMethod == "POST" {
+		if h, ok := handler.(rest.PostHandler); !ok {
+			panic(fmt.Sprintf(errMessage, httpMethod, handlerName))
+		} else {
+			fn = h.Post
+		}
+	} else if httpMethod == "PUT" {
+		if h, ok := handler.(rest.PutHandler); !ok {
+			panic(fmt.Sprintf(errMessage, httpMethod, handlerName))
+		} else {
+			fn = h.Put
+		}
+	} else if httpMethod == "DELETE" {
+		if h, ok := handler.(rest.DeleteHandler); !ok {
+			panic(fmt.Sprintf(errMessage, httpMethod, handlerName))
+		} else {
+			fn = h.Delete
+		}
+	} else if httpMethod == "HEAD" {
+		if h, ok := handler.(rest.HeadHandler); !ok {
+			panic(fmt.Sprintf(errMessage, httpMethod, handlerName))
+		} else {
+			fn = h.Head
+		}
+	} else if httpMethod == "PATCH" {
+		if h, ok := handler.(rest.PatchHandler); !ok {
+			panic(fmt.Sprintf(errMessage, httpMethod, handlerName))
+		} else {
+			fn = h.Patch
+		}
 	}
+
+	wrappedHandler := root.createHttpHandler(fn, endpoint, router.RequestArgs)
+	resourcePathT := path.Join(resourceRoot, endpoint.ResourceT())
+	router.RegisterRoute(httpMethod, resourcePathT, wrappedHandler)
+	root.Log.Inform(fmt.Sprintf("Bound endpoint %s %s", httpMethod, resourcePathT))
 }
 
 // BindAll is a helper for calling Bind on a list of endpoints
