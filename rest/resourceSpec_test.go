@@ -1,7 +1,6 @@
 package rest_test
 
 import (
-	"encoding/json"
 	"reflect"
 
 	"github.com/gotgo/gokn/rest"
@@ -24,39 +23,13 @@ var _ = Describe("ResourceSpec", func() {
 		def = &rest.ResourceDef{
 			ResourceT:    "/abc/{id}",
 			ResourceArgs: nil,
-			Verbs:        []string{"GET"},
+			Verb:         "GET",
 			Headers:      nil,
 			RequestBody:  reflect.TypeOf(TestMessage{}),
 		}
 
-		spec = &rest.ResourceSpec{Definition: def}
-	})
-
-	Context("server behavior", func() {
-
-		It("should be the correct instance type", func() {
-			body := spec.RequestBody()
-
-			bodyTyped, ok := body.(*TestMessage)
-
-			Expect(ok).To(Equal(true))
-
-			bodyTyped.Message = "haha"
-
-			tm := &TestMessage{Message: "test message"}
-			bts, err := json.Marshal(tm)
-			if err != nil {
-				panic(err)
-			}
-
-			err = json.Unmarshal(bts, &body)
-			if err != nil {
-				panic(err)
-			}
-
-			Expect(ok).To(Equal(true))
-			Expect(bodyTyped.Message).To(Equal(tm.Message))
-		})
+		spec = rest.NewResourceSpec("application/json")
+		spec.Use(def)
 	})
 
 	Context("client behavior", func() {
@@ -65,7 +38,7 @@ var _ = Describe("ResourceSpec", func() {
 			cl = spec
 
 			request := cl.Get(nil)
-			Expect(request.Resource).To(Equal(spec.ResourceT()))
+			Expect(request.Resource).To(Equal(def.ResourceT))
 		})
 	})
 })

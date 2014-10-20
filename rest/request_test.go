@@ -20,7 +20,8 @@ var _ = Describe("Request", func() {
 		def := &rest.ResourceDef{
 			ResourceArgs: reflect.TypeOf(rest.IdIntArg{}),
 		}
-		request = rest.NewRequest(&http.Request{}, &rest.RequestContext{}, &rest.ResourceSpec{Definition: def})
+		ct := []string{"application/json"}
+		request = rest.NewRequest(&http.Request{}, &rest.RequestContext{}, rest.NewServerResource(def, ct, ct))
 	})
 
 	It("should DecodeArgs", func() {
