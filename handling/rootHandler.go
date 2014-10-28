@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/gotgo/fw/logging"
 	"github.com/gotgo/fw/tracing"
@@ -152,7 +153,15 @@ func (root *RootHandler) guaranteedReply(writer http.ResponseWriter, response *r
 	}
 }
 
-func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint rest.ServerResource, getArgs func(*http.Request) map[string]string) func(http.ResponseWriter, *http.Request) {
+func flattenForm(form map[string][]string) map[string]string {
+	m := make(map[string]string)
+	for k, v := range form {
+		m[k] = strings.Join(v, ",")
+	}
+	return m
+}
+
+func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint rest.ServerResource) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		traceUid := rest.GetHeaderValue(root.TraceHeader, r.Header)
 		spanUid := rest.GetHeaderValue(root.SpanHeader, r.Header)
@@ -161,7 +170,10 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 		responseData := &responseData{}
 		defer root.guaranteedReply(w, responseData, traceMessage)
 
-		args := getArgs(r)
+		r.ParseForm()
+		args := flattenForm(r.Form)
+		//TODO: parse the query string
+		//args := getArgs(r)
 
 		request, response := root.convertRequestResponse(w, r, endpoint)
 		request.Context.Trace = tracer
@@ -266,7 +278,7 @@ func (root *RootHandler) Bind(router SimpleRouter, endpoint rest.ServerResource,
 		}
 	}
 
-	wrappedHandler := root.createHttpHandler(fn, endpoint, router.RequestArgs)
+	wrappedHandler := root.createHttpHandler(fn, endpoint)
 	resourcePathT := path.Join(resourceRoot, endpoint.ResourceT())
 	router.RegisterRoute(httpMethod, resourcePathT, wrappedHandler)
 	root.Log.Inform(fmt.Sprintf("Bound endpoint %s %s", httpMethod, resourcePathT))

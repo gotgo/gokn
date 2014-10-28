@@ -2,16 +2,19 @@ package testing
 
 import "github.com/gotgo/gokn/rest"
 
-func ConvertToHandler(args, body interface{}, resource ServerResource) (*rest.Request, rest.Responder) {
+func ConvertToHandler(args, body interface{}) (*rest.Request, *rest.Response) {
 	req := &rest.Request{
 		Raw:        nil,
 		Context:    nil,
-		Definition: resource,
+		Definition: nil,
 		Args:       args,
 		Body:       body,
 	}
 
-	resp := &rest.Response{}
+	//we start off in a success state
+	resp := &rest.Response{
+		Status: 200,
+	}
 
 	return req, resp
 }
