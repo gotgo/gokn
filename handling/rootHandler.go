@@ -148,7 +148,14 @@ func (root *RootHandler) guaranteedReply(writer http.ResponseWriter, response *r
 		if data == nil {
 			data = []byte{}
 		}
-		writer.Write(data)
+
+		if bytesSent, err := writer.Write(data); err != nil {
+			root.Log.Warn("failed to write response",
+				&logging.KeyValue{"message", "partial reply, failed to send entire reply"},
+				&logging.KeyValue{"bytesSent", bytesSent},
+				&logging.KeyValue{"totalBytes", len(data)},
+			)
+		}
 		trace.RequestCompleted()
 	}
 }
@@ -210,20 +217,13 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 			responseData.StatusMessage = "Internal Server Error - Failed to encode response body"
 			return
 		}
+		w.Header()["ContentLength"] = []string{strconv.Itoa(len(bts))}
+		responseData.Data = bts
 
 		if response.IsBinary() {
 			traceMessage.AnnotateBinary(tracing.ResponseData, "body", bytes.NewReader(bts), response.ContentType)
 		} else {
 			traceMessage.Annotate(tracing.ResponseData, "body", response.Body)
-		}
-
-		w.Header()["ContentLength"] = []string{strconv.Itoa(len(bts))}
-		if bytesSent, err := w.Write(bts); err != nil {
-			root.Log.Warn("failed to write response",
-				&logging.KeyValue{"message", "partial reply, failed to send entire reply"},
-				&logging.KeyValue{"bytesSent", bytesSent},
-				&logging.KeyValue{"totalBytes", len(bts)},
-			)
 		}
 	}
 }

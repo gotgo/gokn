@@ -28,7 +28,7 @@ func (trw *TestResponseWriter) Header() http.Header {
 
 func (trw *TestResponseWriter) Write(bytes []byte) (int, error) {
 	trw.WriteBytes = bytes
-	return trw.WriteReturnCount, trw.WriteReturnError
+	return len(bytes), trw.WriteReturnError
 }
 
 func (trw *TestResponseWriter) WriteHeader(code int) {
@@ -91,19 +91,18 @@ func NewTestHandler() *TestHandler {
 func (th *TestHandler) setResponse(resp rest.Responder) {
 	if th.ResponseStatus != 200 {
 		resp.SetStatus(th.ResponseStatus, "")
+	} else {
+		resp.SetBody(&TestStruct{"response"})
 	}
-
 }
 
 func (th *TestHandler) Get(req *rest.Request, resp rest.Responder) {
 	th.setResponse(resp)
 }
 func (th *TestHandler) Post(req *rest.Request, resp rest.Responder) {
-	resp.SetBody(&TestStruct{"response"})
 	th.setResponse(resp)
 }
 func (th *TestHandler) Put(req *rest.Request, resp rest.Responder) {
-	resp.SetBody(&TestStruct{"response"})
 	th.setResponse(resp)
 }
 func (th *TestHandler) Delete(req *rest.Request, resp rest.Responder) {
@@ -244,9 +243,9 @@ var _ = Describe("RootHandler", func() {
 			root.Bind(router, spec, handler, "")
 			Expect(len(router.Handlers)).To(Equal(1))
 			wrappedHandler := router.Handlers[0]
-			//handler.Body = struct{ Name string }{Name: "dude"}
 			request.Header = make(map[string][]string)
 			request.Header["Content-Type"] = []string{"application/json"}
+			handler.ResponseStatus = 200
 			wrappedHandler(writer, request)
 			Expect(writer.WriteBytes).ToNot(BeNil())
 			Expect(len(writer.WriteBytes)).Should(BeNumerically(">", 0))
