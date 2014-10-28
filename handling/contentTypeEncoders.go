@@ -21,7 +21,13 @@ func NewContentTypeEncoders() *ContentTypeEncoders {
 		Encode:      jsonEncoder,
 	}
 
+	text := &ContentTypeEncoder{
+		ContentType: "text/plain",
+		Encode:      plainTextEncoder,
+	}
+
 	cd.library[json.ContentType] = json
+	cd.library[text.ContentType] = text
 	return cd
 }
 
@@ -30,6 +36,14 @@ func jsonEncoder(v interface{}) ([]byte, error) {
 		return nil, err
 	} else {
 		return bytes, nil
+	}
+}
+
+func plainTextEncoder(v interface{}) ([]byte, error) {
+	if str, ok := v.(string); !ok {
+		return nil, errors.New("failed to cast to string")
+	} else {
+		return []byte(str), nil
 	}
 }
 

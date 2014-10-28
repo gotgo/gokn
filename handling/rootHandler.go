@@ -201,10 +201,10 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 			return
 		}
 
-		if response.IsStruct() {
-			traceMessage.Annotate(tracing.ResponseData, "body", response.Body)
-		} else {
+		if response.IsBinary() {
 			traceMessage.AnnotateBinary(tracing.ResponseData, "body", bytes.NewReader(bts), response.ContentType)
+		} else {
+			traceMessage.Annotate(tracing.ResponseData, "body", response.Body)
 		}
 
 		w.Header()["ContentLength"] = []string{strconv.Itoa(len(bts))}

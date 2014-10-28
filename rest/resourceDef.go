@@ -6,8 +6,8 @@ import "reflect"
 type ResourceDef struct {
 	ResourceT    string // /sync/order
 	ResourceArgs reflect.Type
-	Verb         string // GET POST
-	Headers      []string
+	Verb         string   // GET POST
+	Headers      []string //TODO: change to reflect.Type
 	RequestBody  reflect.Type
 	ResponseBody reflect.Type
 	// where else would be put content type, if not here?

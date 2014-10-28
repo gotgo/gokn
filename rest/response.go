@@ -10,11 +10,19 @@ type Response struct {
 	ContentType string
 }
 
-func (r *Response) IsStruct() bool {
+func (r *Response) IsBinary() bool {
 	body := r.Body
 
 	if body == nil {
 		return false
+	}
+
+	if _, ok := body.(string); ok {
+		return false
+	}
+
+	if _, ok := body.([]byte); ok {
+		return true
 	}
 
 	t := reflect.TypeOf(body)
@@ -23,9 +31,9 @@ func (r *Response) IsStruct() bool {
 	}
 
 	if t.Kind() == reflect.Struct {
-		return true
-	} else {
 		return false
+	} else {
+		return true
 	}
 }
 

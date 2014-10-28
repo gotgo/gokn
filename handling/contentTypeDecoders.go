@@ -100,8 +100,6 @@ func (cd *ContentTypeDecoders) DecodeBody(req *rest.Request, trace tracing.Trace
 		return err
 	}
 
-	//	p := make([]byte, req.Raw.ContentLength)
-	//	req.Raw.Body.Read(p)
 	if body != nil {
 		trace.AnnotateBinary(tracing.RequestData, "body", bytes.NewReader(bts), contentType)
 

@@ -13,7 +13,8 @@ type Request struct {
 	Definition ServerResource
 	Args       interface{}
 	Body       interface{}
-	bodyBytes  []byte
+	//header????
+	bodyBytes []byte
 }
 
 func NewRequest(raw *http.Request, ctx *RequestContext, spec ServerResource) *Request {

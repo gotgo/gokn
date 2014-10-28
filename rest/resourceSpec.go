@@ -8,12 +8,18 @@ type ResourceSpec struct {
 	delete             *ResourceDef
 	patch              *ResourceDef
 	head               *ResourceDef
+	defaultHandler     Handler
 }
 
 func NewResourceSpec(defaultContentType string) *ResourceSpec {
 	return &ResourceSpec{
 		defaultContentType: []string{defaultContentType},
 	}
+}
+
+func (r *ResourceSpec) WithHandler(handler Handler) *ResourceSpec {
+	r.defaultHandler = handler
+	return r
 }
 
 func (r *ResourceSpec) Use(def *ResourceDef) *ResourceSpec {
@@ -34,7 +40,7 @@ func (r *ResourceSpec) Use(def *ResourceDef) *ResourceSpec {
 	return r
 }
 
-func (rs *ResourceSpec) ServeAll() []ServerResource {
+func (rs *ResourceSpec) ServeAll() ([]ServerResource, Handler) {
 	ct := rs.defaultContentType
 	all := make([]ServerResource, 0)
 	if rs.get != nil {
@@ -60,7 +66,7 @@ func (rs *ResourceSpec) ServeAll() []ServerResource {
 	if rs.patch != nil {
 		all = append(all, NewServerResource(rs.patch, ct, ct))
 	}
-	return all
+	return all, rs.defaultHandler
 }
 
 // Client Behavior

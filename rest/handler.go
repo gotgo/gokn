@@ -2,10 +2,6 @@ package rest
 
 type HandlerFunc func(*Request, Responder)
 
-//func (h HandlerFunc) HandleRequest(req *Request, responder Responder) {
-//	h(req, responder)
-//}
-
 // RestHandler is a marker interface
 type Handler interface {
 }
