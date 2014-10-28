@@ -25,6 +25,7 @@ func FullApiWithHandlers(apiSpec interface{}) map[ServerResource]Handler {
 	if err != nil {
 		panic(err)
 	}
+
 	for _, v := range items {
 		if target, ok := v.(*ResourceSpec); ok {
 			verbs, handler := target.ServeAll()

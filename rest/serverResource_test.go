@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"reflect"
 
+	. "github.com/gotgo/gokn/rest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

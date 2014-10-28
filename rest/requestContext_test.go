@@ -1,6 +1,7 @@
 package rest_test
 
 import (
+	"github.com/gotgo/gokn/rest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -8,7 +9,7 @@ import (
 var _ = Describe("RequestContext", func() {
 
 	It("should add get remove", func() {
-		ctx := NewRequestContext()
+		ctx := rest.NewRequestContext()
 
 		ctx.Add("a", "data", 37)
 		result, found := ctx.Get("a", "data")

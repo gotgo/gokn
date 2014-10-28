@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/gotgo/fw/io"
 	"github.com/gotgo/gokn/rest"
 	"github.com/gotgo/gokn/testing"
 
@@ -14,14 +15,18 @@ import (
 // Client Test relies on an echo service runing on localhost:23000
 // There is an echo service the the testing folder that can be run to satisfy this
 // requirement
-var ()
+var (
+	listener *io.GracefulListener
+)
 
 var _ = BeforeSuite(func() {
 	fmt.Println("******* this suite requires the testing echo service to be running on 23000 *****")
+
+	listener = testing.StartEchoHandler()
 })
 
 var _ = AfterSuite(func() {
-
+	listener.Shutdown()
 })
 
 type echo struct {
