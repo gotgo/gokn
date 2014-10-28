@@ -65,11 +65,7 @@ func (cte *ContentTypeEncoders) Encode(data interface{}, contentType string) ([]
 	}
 
 	if encoder := cte.library[contentType]; encoder != nil {
-		if bts, err := encoder.Encode(data); err != nil {
-			return nil, err
-		} else {
-			return bts, nil
-		}
+		return encoder.Encode(data)
 	}
 
 	return nil, errors.New("Encode Fail.  Unknown contentType " + contentType)

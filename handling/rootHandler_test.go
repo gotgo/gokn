@@ -239,11 +239,12 @@ var _ = Describe("RootHandler", func() {
 
 	Context("Calling wrapped handler", func() {
 
-		FIt("should write bytes", func() {
+		It("should write bytes", func() {
 			spec := getSpec("/test", "POST")
 			root.Bind(router, spec, handler, "")
+			Expect(len(router.Handlers)).To(Equal(1))
 			wrappedHandler := router.Handlers[0]
-
+			//handler.Body = struct{ Name string }{Name: "dude"}
 			request.Header = make(map[string][]string)
 			request.Header["Content-Type"] = []string{"application/json"}
 			wrappedHandler(writer, request)
