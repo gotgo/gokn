@@ -172,8 +172,6 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 
 		r.ParseForm()
 		args := flattenForm(r.Form)
-		//TODO: parse the query string
-		//args := getArgs(r)
 
 		request, response := root.convertRequestResponse(w, r, endpoint)
 		request.Context.Trace = tracer
@@ -221,15 +219,11 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 
 		w.Header()["ContentLength"] = []string{strconv.Itoa(len(bts))}
 		if bytesSent, err := w.Write(bts); err != nil {
-			root.Log.Warn("failed to write response", "info", struct {
-				Message    string `json:"message"`
-				BytesSent  int    `json:"bytesSent"`
-				TotalBytes int    `json:"totalBytes"`
-			}{
-				"partial reply, failed to send entire reply",
-				bytesSent,
-				len(bts),
-			})
+			root.Log.Warn("failed to write response",
+				&logging.KeyValue{"message", "partial reply, failed to send entire reply"},
+				&logging.KeyValue{"bytesSent", bytesSent},
+				&logging.KeyValue{"totalBytes", len(bts)},
+			)
 		}
 	}
 }
