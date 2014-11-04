@@ -49,7 +49,7 @@ func (t *Client) SetHeader(h interface{}) error {
 
 // Fetch makes it easier to Unmarshal the response from Do
 func (c *Client) Fetch(r *ClientRequest, ctx *RequestContext, v interface{}) (*EndpointResponse, error) {
-	if resp, err := c.Do(r, ctx); err != nil {
+	if resp, err := c.Send(r, ctx); err != nil {
 		return nil, err
 	} else if bytes, err := resp.Bytes(); err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func (c *Client) Fetch(r *ClientRequest, ctx *RequestContext, v interface{}) (*E
 	}
 }
 
-func (c *Client) Do(r *ClientRequest, ctx *RequestContext) (*EndpointResponse, error) {
+func (c *Client) Send(r *ClientRequest, ctx *RequestContext) (*EndpointResponse, error) {
 	tracer := ctx.Trace.NewRequest(resourceName(r), getArgs(r), r.Headers)
 	tracer.Begin()
 	defer tracer.End()

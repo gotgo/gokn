@@ -53,7 +53,7 @@ var _ = Describe("Client", func() {
 
 	Context("Client DO", func() {
 		AssertDoExpectations := func(req *rest.ClientRequest) {
-			resp, err := client.Do(req, context)
+			resp, err := client.Send(req, context)
 
 			hr := resp.HttpResponse
 
@@ -110,7 +110,7 @@ var _ = Describe("Client", func() {
 				Resource: "",
 				Verb:     "HEAD",
 			}
-			resp, err := client.Do(req, context)
+			resp, err := client.Send(req, context)
 
 			Expect(err).To(BeNil())
 			Expect(resp).ToNot(BeNil())
@@ -184,7 +184,7 @@ var _ = Describe("Client", func() {
 				Resource: "",
 				Verb:     "HEAD",
 			}
-			resp, err := client.Do(req, context)
+			resp, err := client.Send(req, context)
 
 			Expect(err).To(BeNil())
 			Expect(resp).ToNot(BeNil())
