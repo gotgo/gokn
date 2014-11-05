@@ -19,10 +19,14 @@ import (
 // Client executes REST calls
 type Client struct {
 	Headers   map[string][]string
-	Endpoints []ResourceEndpoint
+	Endpoints []*ResourceEndpoint
 	Encoder   func(v interface{}) ([]byte, error)
 	Decoder   func(data []byte, v interface{}) error
 	Tracer    tracing.RequestTracer
+}
+
+type Sender interface {
+	Send(r *ClientRequest, ctx *RequestContext) (*EndpointResponse, error)
 }
 
 func NewClient() *Client {
@@ -66,7 +70,7 @@ func (c *Client) Send(r *ClientRequest, ctx *RequestContext) (*EndpointResponse,
 
 	client := new(http.Client)
 
-	if req, err := c.newHttpRequest(r); err != nil {
+	if req, err := c.NewHttpRequest(r); err != nil {
 		tracer.Annotate(tracing.Error, "request", err)
 		return nil, err
 	} else if resp, err := client.Do(req); err != nil {
@@ -81,7 +85,7 @@ func (c *Client) Send(r *ClientRequest, ctx *RequestContext) (*EndpointResponse,
 }
 
 // newHttpRequest converts a ClientRequest into a http.Request
-func (c *Client) newHttpRequest(cr *ClientRequest) (*http.Request, error) {
+func (c *Client) NewHttpRequest(cr *ClientRequest) (*http.Request, error) {
 	resource, query := splitQueryPath(cr.Resource)
 
 	var bts []byte
@@ -135,9 +139,16 @@ func resourceName(r *ClientRequest) string {
 	}
 }
 
-func (c *Client) endpoint() ResourceEndpoint {
-	i := randInt(0, len(c.Endpoints)-1)
-	return c.Endpoints[i]
+func (c *Client) endpoint() *ResourceEndpoint {
+	if len(c.Endpoints) == 0 {
+		return &ResourceEndpoint{
+			Scheme: "http://",
+			Host:   "localhost",
+		}
+	} else {
+		i := randInt(0, len(c.Endpoints)-1)
+		return c.Endpoints[i]
+	}
 }
 
 func randInt(min int, max int) int {

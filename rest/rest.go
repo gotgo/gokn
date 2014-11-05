@@ -18,6 +18,19 @@ func GetHeaderValue(key string, headers map[string][]string) string {
 	return ""
 }
 
+// currently used primarily for testing, however, could be used to make request to the
+// local process for cases where it made more sense to delpoy a typically remote resource locally
+func LocalRequest(cr *ClientRequest) (*Request, *Response) {
+	response := NewResponse()
+	client := NewClient()
+	if rawReq, err := client.NewHttpRequest(cr); err != nil {
+		panic(err)
+	} else {
+		request := NewRequest(rawReq, NewRequestContext(), cr.Definition)
+		return request, response
+	}
+}
+
 func FullApiWithHandlers(apiSpec interface{}) map[ServerResource]Handler {
 	handlers := make(map[ServerResource]Handler)
 
@@ -46,6 +59,11 @@ func Bytes(resp *EndpointResponse, err error) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if resp == nil {
+		return nil, errors.New("no response from endpoint or code incorrectly called.")
+	}
+
 	if resp.HttpResponse == nil {
 		return nil, errors.New("No HttpResponse Response")
 	}

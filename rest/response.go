@@ -10,6 +10,14 @@ type Response struct {
 	ContentType string
 }
 
+func NewResponse() *Response {
+	return &Response{
+		Status:  200,
+		Message: "OK",
+		Headers: make(map[string]string),
+	}
+}
+
 func (r *Response) IsBinary() bool {
 	body := r.Body
 
