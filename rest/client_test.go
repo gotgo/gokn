@@ -45,8 +45,9 @@ var _ = Describe("Client", func() {
 			Host:   "localhost:23000",
 			Scheme: "http",
 		}
+
 		client = &rest.Client{
-			Endpoints: []rest.ResourceEndpoint{*endpoint},
+			Endpoints: []*rest.ResourceEndpoint{endpoint},
 		}
 		context = rest.NewRequestContext()
 	})

@@ -27,6 +27,8 @@ func LocalRequest(cr *ClientRequest) (*Request, *Response) {
 		panic(err)
 	} else {
 		request := NewRequest(rawReq, NewRequestContext(), cr.Definition)
+		request.Body = cr.Body
+		request.Args = cr.args
 		return request, response
 	}
 }
