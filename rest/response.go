@@ -8,6 +8,7 @@ type Response struct {
 	Message     string
 	Headers     map[string]string
 	ContentType string
+	Error       error
 }
 
 func NewResponse() *Response {
@@ -49,9 +50,10 @@ func (r *Response) SetBody(data interface{}) {
 	r.Body = data
 }
 
-func (r *Response) SetStatus(status int, message string) {
+func (r *Response) SetStatus(status int, message string, err error) {
 	r.Status = status
 	r.Message = message
+	r.Error = err
 }
 
 func (r *Response) SetContentType(contentType string) {

@@ -12,9 +12,20 @@ import (
 )
 
 func StartEchoHandler() *io.GracefulListener {
+	return start(23000, "/", EchoHandler)
+}
 
+func StartGeneratedHandler(port int, path string, dataGen func() (int, []byte)) *io.GracefulListener {
+	return start(port, path, func(w http.ResponseWriter, r *http.Request) {
+		statusCode, bts := dataGen()
+		w.WriteHeader(statusCode)
+		w.Write(bts)
+	})
+}
+
+func start(port int, path string, handler func(http.ResponseWriter, *http.Request)) *io.GracefulListener {
 	r := mux.NewRouter()
-	r.HandleFunc("/", EchoHandler)
+	r.HandleFunc(path, handler)
 	httpMux := http.NewServeMux()
 	httpMux.Handle("/", r)
 	server := &http.Server{
@@ -22,8 +33,7 @@ func StartEchoHandler() *io.GracefulListener {
 	}
 
 	var gracefulListener *io.GracefulListener
-	port := "23000"
-	if listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port)); err != nil {
+	if listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port)); err != nil {
 		panic(err)
 	} else if gracefulListener, err = io.MakeGraceful(listener); err != nil {
 		panic(err)

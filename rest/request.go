@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/gotgo/fw/tracing"
 	"github.com/gotgo/fw/util"
 )
 
@@ -34,6 +35,10 @@ func (r *Request) ContentType() string {
 		}
 	}
 	return ""
+}
+
+func (r *Request) Annotate(f tracing.From, k string, v interface{}) {
+	r.Context.Trace.Annotate(f, k, v)
 }
 
 // Bytes returns the body of the request as a []byte

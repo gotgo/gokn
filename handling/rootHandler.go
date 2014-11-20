@@ -200,6 +200,10 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 		boundHandler := root.Binder(handler)
 		boundHandler(request, response)
 
+		if response.Error != nil {
+			request.Context.Trace.Annotate(tracing.Error, "failed to forward order request", response.Error.Error())
+		}
+
 		responseData.StatusCode = response.Status
 
 		if response.Status != http.StatusOK {
