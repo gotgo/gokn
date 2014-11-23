@@ -126,7 +126,7 @@ func (root *RootHandler) guaranteedReply(writer http.ResponseWriter, response *r
 		panicMessage = getErrorMessage(r)
 		response.StatusMessage = "Internal Server Error"
 		response.StatusCode = 500
-		trace.Annotate(tracing.Panic, "request fail", panicMessage)
+		trace.Annotate(tracing.FromPanic, "request fail", panicMessage)
 		root.Log.Error("Panic Occured", errors.New(panicMessage))
 	}
 
@@ -139,7 +139,7 @@ func (root *RootHandler) guaranteedReply(writer http.ResponseWriter, response *r
 			root.Log.Error("Unhandled Panic", errors.New("Request Not completed"))
 		}
 
-		trace.Annotate(tracing.Error, fmt.Sprintf("httpResponse: %v", response.StatusCode), response.StatusMessage)
+		trace.Annotate(tracing.FromError, fmt.Sprintf("httpResponse: %v", response.StatusCode), response.StatusMessage)
 		trace.RequestFail()
 		http.Error(writer, response.StatusMessage, response.StatusCode)
 		writer.Write([]byte{})
@@ -201,7 +201,7 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 		boundHandler(request, response)
 
 		if response.Error != nil {
-			request.Context.Trace.Annotate(tracing.Error, "failed to forward order request", response.Error.Error())
+			request.Context.Trace.Annotate(tracing.FromError, "failed to forward order request", response.Error.Error())
 		}
 
 		responseData.StatusCode = response.Status
@@ -225,9 +225,9 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 		responseData.Data = bts
 
 		if response.IsBinary() {
-			traceMessage.AnnotateBinary(tracing.ResponseData, "body", bytes.NewReader(bts), response.ContentType)
+			traceMessage.AnnotateBinary(tracing.FromResponseData, "body", bytes.NewReader(bts), response.ContentType)
 		} else {
-			traceMessage.Annotate(tracing.ResponseData, "body", response.Body)
+			traceMessage.Annotate(tracing.FromResponseData, "body", response.Body)
 		}
 	}
 }

@@ -101,7 +101,7 @@ func (cd *ContentTypeDecoders) DecodeBody(req *rest.Request, trace tracing.Trace
 	}
 
 	if body != nil {
-		trace.AnnotateBinary(tracing.RequestData, "body", bytes.NewReader(bts), contentType)
+		trace.AnnotateBinary(tracing.FromRequestData, "body", bytes.NewReader(bts), contentType)
 
 		if isBytes(reflect.TypeOf(body)) {
 			//if body type is castable to []byte, then we don't encode, just set directly

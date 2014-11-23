@@ -71,10 +71,10 @@ func (c *Client) Send(r *ClientRequest, ctx *RequestContext) (*EndpointResponse,
 	client := new(http.Client)
 
 	if req, err := c.NewHttpRequest(r); err != nil {
-		tracer.Annotate(tracing.Error, "request", err)
+		tracer.Annotate(tracing.FromError, "request", err)
 		return nil, err
 	} else if resp, err := client.Do(req); err != nil {
-		tracer.Annotate(tracing.Error, "request", err)
+		tracer.Annotate(tracing.FromError, "request", err)
 		return nil, err
 	} else {
 		resp := &EndpointResponse{
