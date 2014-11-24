@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/gotgo/fw/logging"
+	"github.com/gotgo/fw/me"
 	"github.com/gotgo/fw/tracing"
 	"github.com/gotgo/gokn/rest"
 )
@@ -123,11 +124,14 @@ func (root *RootHandler) guaranteedReply(writer http.ResponseWriter, response *r
 
 	var panicMessage string
 	if r := recover(); r != nil {
+		stack := make([]byte, 2048)
+		runtime.Stack(stack, true)
 		panicMessage = getErrorMessage(r)
 		response.StatusMessage = "Internal Server Error"
 		response.StatusCode = 500
 		trace.Annotate(tracing.FromPanic, "request fail", panicMessage)
-		root.Log.Error("Panic Occured", errors.New(panicMessage))
+		trace.Annotate(tracing.FromPanic, "stack", stack)
+		root.Log.Error("Panic Occured", me.NewErr(panicMessage+" "+string(stack)))
 	}
 
 	if response.StatusCode != 200 {
