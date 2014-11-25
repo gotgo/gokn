@@ -232,7 +232,7 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 		if response.IsBinary() {
 			traceMessage.AnnotateBinary(tracing.FromResponseData, "body", bytes.NewReader(bts), response.ContentType)
 		} else {
-			traceMessage.Annotate(tracing.FromResponseData, "body", response.Body)
+			traceMessage.Annotate(tracing.FromResponseData, "body", fmt.Sprintf("%s", response.Body))
 		}
 	}
 }

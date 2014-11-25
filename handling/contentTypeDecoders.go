@@ -3,6 +3,7 @@ package handling
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"reflect"
@@ -30,12 +31,13 @@ func NewContentTypeDecoders() *ContentTypeDecoders {
 	return cd
 }
 
-func JsonDecoder(reader io.Reader, v interface{}) error {
+func JsonDecoder(reader io.Reader, v interface{}, trace tracing.Tracer) error {
 	if bytes, err := ioutil.ReadAll(reader); err != nil {
 		return err
 	} else if err = json.Unmarshal(bytes, &v); err != nil {
 		return err
 	} else {
+		trace.Annotate(tracing.FromRequestData, "body", fmt.Sprintf("%s", bytes))
 		return nil
 	}
 }
@@ -87,10 +89,8 @@ func (cd *ContentTypeDecoders) DecodeBody(req *rest.Request, trace tracing.Trace
 
 	ctype := req.Raw.Header["Content-Type"]
 	decoder := cd.Get(ctype)
-	contentType := ""
-	if decoder != nil {
-		contentType = decoder.ContentType
-	}
+
+	//new empty instance
 	body := req.Definition.RequestBody()
 
 	var bts []byte
@@ -101,24 +101,26 @@ func (cd *ContentTypeDecoders) DecodeBody(req *rest.Request, trace tracing.Trace
 	}
 
 	if body != nil {
-		trace.AnnotateBinary(tracing.FromRequestData, "body", bytes.NewReader(bts), contentType)
 
 		if isBytes(reflect.TypeOf(body)) {
 			//if body type is castable to []byte, then we don't encode, just set directly
 			req.Body = bts
 			return nil
 		} else if decoder != nil {
-			decoder.Decode(bytes.NewReader(bts), &body)
+			decoder.Decode(bytes.NewReader(bts), &body, trace)
 			req.Body = body
 		} else if containsType(ctype, "application/x-www-form-urlencoded") {
 			req.Raw.ParseForm()
 			if err := util.MapHeaderToStruct(req.Raw.Form, &body); err != nil {
 				return err
 			}
+			trace.Annotate(tracing.FromRequestData, "body", fmt.Sprintf("%+v", body))
 			req.Body = body
-		} else if err = json.Unmarshal(bts, &body); err != nil {
-			return err
 		} else {
+			if err = json.Unmarshal(bts, &body); err != nil {
+				return err
+			}
+			trace.Annotate(tracing.FromRequestData, "body", fmt.Sprintf("%s", bts))
 			req.Body = body
 		}
 	}

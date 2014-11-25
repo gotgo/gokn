@@ -1,8 +1,12 @@
 package handling
 
-import "io"
+import (
+	"io"
+
+	"github.com/gotgo/fw/tracing"
+)
 
 type ContentTypeDecoder struct {
 	ContentType string
-	Decode      func(r io.Reader, v interface{}) error
+	Decode      func(r io.Reader, v interface{}, trace tracing.Tracer) error
 }
