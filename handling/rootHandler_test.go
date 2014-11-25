@@ -90,7 +90,7 @@ func NewTestHandler() *TestHandler {
 
 func (th *TestHandler) setResponse(resp rest.Responder) {
 	if th.ResponseStatus != 200 {
-		resp.SetStatus(th.ResponseStatus, "")
+		resp.SetStatus(th.ResponseStatus, "", nil)
 	} else {
 		resp.SetBody(&TestStruct{"response"})
 	}
