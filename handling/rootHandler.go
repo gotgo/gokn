@@ -129,9 +129,10 @@ func (root *RootHandler) guaranteedReply(writer http.ResponseWriter, response *r
 		panicMessage = getErrorMessage(r)
 		response.StatusMessage = "Internal Server Error"
 		response.StatusCode = 500
+		stackTrace := fmt.Sprintf("%s callstack: %s", panicMessage, stack)
 		trace.Annotate(tracing.FromPanic, "request fail", panicMessage)
-		trace.Annotate(tracing.FromPanic, "stack", stack)
-		root.Log.Error("Panic Occured", me.NewErr(fmt.Sprintf("%s callstack: %s", panicMessage, stack)))
+		trace.Annotate(tracing.FromPanic, "stack", stackTrace)
+		root.Log.Error("Panic Occured", me.NewErr(stackTrace))
 	}
 
 	if response.StatusCode != 200 {
