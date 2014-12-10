@@ -1,9 +1,12 @@
 package rest
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"sort"
 
 	"github.com/oleiade/reflections"
 )
@@ -78,4 +81,34 @@ func Bytes(resp *EndpointResponse, err error) ([]byte, error) {
 	} else {
 		return bytes, nil
 	}
+}
+
+// Encode - Returns a URL that is encoded in a way that makes sense, preseves as many special characters
+// as possible. The default encoding from GO makes no sense as it encodes even valid values such as + , :
+func Encode(v url.Values) string {
+	if v == nil {
+		return ""
+	}
+	var buf bytes.Buffer
+	keys := make([]string, 0, len(v))
+	for k := range v {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		vs := v[k]
+		prefix := k + "="
+		for _, v := range vs {
+			if buf.Len() > 0 {
+				buf.WriteByte('&')
+			}
+			buf.WriteString(prefix)
+			buf.WriteString(v)
+		}
+	}
+	path := buf.String()
+	u := &url.URL{
+		Path: path,
+	}
+	return u.RequestURI()
 }
