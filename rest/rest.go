@@ -106,11 +106,7 @@ func Encode(v url.Values) string {
 			buf.WriteString(escape(v, encodeQueryComponent))
 		}
 	}
-	path := buf.String()
-	u := &url.URL{
-		Path: path,
-	}
-	return u.RequestURI()
+	return buf.String()
 }
 
 func escape(s string, mode encoding) string {
