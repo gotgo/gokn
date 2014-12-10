@@ -83,7 +83,7 @@ func Bytes(resp *EndpointResponse, err error) ([]byte, error) {
 	}
 }
 
-// Encode - Returns a URL that is encoded in a way that makes sense, preseves as many special characters
+// Encode - Returns a URL that is encoded in a way that is actually used in practice, preseves as many special characters
 // as possible. The default encoding from GO makes no sense as it encodes even valid values such as + , :
 func Encode(v url.Values) string {
 	if v == nil {
@@ -97,13 +97,13 @@ func Encode(v url.Values) string {
 	sort.Strings(keys)
 	for _, k := range keys {
 		vs := v[k]
-		prefix := k + "="
+		prefix := escape(k, encodePath) + "="
 		for _, v := range vs {
 			if buf.Len() > 0 {
 				buf.WriteByte('&')
 			}
 			buf.WriteString(prefix)
-			buf.WriteString(v)
+			buf.WriteString(escape(v, encodeQueryComponent))
 		}
 	}
 	path := buf.String()
@@ -111,4 +111,94 @@ func Encode(v url.Values) string {
 		Path: path,
 	}
 	return u.RequestURI()
+}
+
+func escape(s string, mode encoding) string {
+	spaceCount, hexCount := 0, 0
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if shouldEscape(c, mode) {
+			if c == ' ' && mode == encodeQueryComponent {
+				spaceCount++
+			} else {
+				hexCount++
+			}
+		}
+	}
+
+	if spaceCount == 0 && hexCount == 0 {
+		return s
+	}
+
+	t := make([]byte, len(s)+2*hexCount)
+	j := 0
+	for i := 0; i < len(s); i++ {
+		switch c := s[i]; {
+		case c == ' ' && mode == encodeQueryComponent:
+			t[j] = '+'
+			j++
+		case shouldEscape(c, mode):
+			t[j] = '%'
+			t[j+1] = "0123456789ABCDEF"[c>>4]
+			t[j+2] = "0123456789ABCDEF"[c&15]
+			j += 3
+		default:
+			t[j] = s[i]
+			j++
+		}
+	}
+	return string(t)
+}
+
+type encoding int
+
+const (
+	encodePath encoding = 1 + iota
+	encodeUserPassword
+	encodeQueryComponent
+	encodeFragment
+)
+
+// Return true if the specified character should be escaped when
+// appearing in a URL string, according to RFC 3986.
+// When 'all' is true the full range of reserved characters are matched.
+func shouldEscape(c byte, mode encoding) bool {
+	// §2.3 Unreserved characters (alphanum)
+	if 'A' <= c && c <= 'Z' || 'a' <= c && c <= 'z' || '0' <= c && c <= '9' {
+		return false
+	}
+
+	switch c {
+	case '-', '_', '.', '~': // §2.3 Unreserved characters (mark)
+		return false
+
+	case '$', '&', '+', ',', '/', ':', ';', '=', '?', '@': // §2.2 Reserved characters (reserved)
+		// Different sections of the URL allow a few of
+		// the reserved characters to appear unescaped.
+		switch mode {
+		case encodePath: // §3.3
+			// The RFC allows : @ & = + $ but saves / ; , for assigning
+			// meaning to individual path segments. This package
+			// only manipulates the path as a whole, so we allow those
+			// last two as well. That leaves only ? to escape.
+			return c == '?'
+
+		case encodeUserPassword: // §3.2.2
+			// The RFC allows ; : & = + $ , in userinfo, so we must escape only @ and /.
+			// The parsing of userinfo treats : as special so we must escape that too.
+			return c == '@' || c == '/' || c == ':'
+
+		case encodeQueryComponent: // §3.4
+			//screw RFC, in practice many api's require these characters including google cse
+			return c == '?'
+
+		case encodeFragment: // §4.1
+			// The RFC text is silent but the grammar allows
+			// everything, so escape nothing.
+			return false
+		}
+	}
+
+	// Everything else must be escaped.
+	return true
 }
