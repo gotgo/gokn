@@ -11,6 +11,11 @@ import (
 	"github.com/oleiade/reflections"
 )
 
+const (
+	ContentTypeJson = "application/json"
+	ContentTypeText = "text/plain"
+)
+
 //more work to support http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
 
 func GetHeaderValue(key string, headers map[string][]string) string {

@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/gotgo/fw/logging"
 	"github.com/gotgo/fw/me"
 	"github.com/gotgo/fw/tracing"
@@ -173,6 +174,18 @@ func flattenForm(form map[string][]string) map[string]string {
 	return m
 }
 
+// TODO: remove direct dependency on gorilla mux, for path
+func (root *RootHandler) hackReqArgs(req *http.Request, existingArgs map[string]string) {
+	//get the /avar/{avar}/bvar/{bvar}
+	pa := mux.Vars(req)
+	if pa != nil {
+		//TODO: right now this overwrites... maybe it should not??
+		for k, v := range pa {
+			existingArgs[k] = v
+		}
+	}
+}
+
 func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint rest.ServerResource) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		traceUid := rest.GetHeaderValue(root.TraceHeader, r.Header)
@@ -184,6 +197,7 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 
 		r.ParseForm()
 		args := flattenForm(r.Form)
+		root.hackReqArgs(r, args)
 
 		request, response := root.convertRequestResponse(w, r, endpoint)
 		request.Context.Trace = tracer
@@ -206,7 +220,7 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 		boundHandler(request, response)
 
 		if response.Error != nil {
-			request.Context.Trace.Annotate(tracing.FromError, "failed to forward order request", response.Error.Error())
+			request.Context.Trace.Annotate(tracing.FromError, "request failed", response.Error)
 		}
 
 		responseData.StatusCode = response.Status
