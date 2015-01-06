@@ -240,7 +240,7 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 			responseData.StatusMessage = "Internal Server Error - Failed to encode response body"
 			return
 		}
-		w.Header()["ContentLength"] = []string{strconv.Itoa(len(bts))}
+		w.Header()["Content-Length"] = []string{strconv.Itoa(len(bts))}
 		responseData.Data = bts
 
 		if response.IsBinary() {
