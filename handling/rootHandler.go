@@ -196,7 +196,7 @@ func (root *RootHandler) createHttpHandler(handler rest.HandlerFunc, endpoint re
 		defer root.guaranteedReply(w, responseData, traceMessage)
 
 		//should ParseMultipartForm be configurable?? so it's only called when needed?
-		r.ParseMultipartForm(12000)
+		r.ParseMultipartForm(120000)
 		args := flattenForm(r.Form)
 		root.hackReqArgs(r, args)
 
