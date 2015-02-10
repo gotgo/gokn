@@ -157,9 +157,9 @@ func (root *RootHandler) guaranteedReply(writer http.ResponseWriter, response *r
 
 		if bytesSent, err := writer.Write(data); err != nil {
 			root.Log.Warn("failed to write response",
-				&logging.KeyValue{"message", "partial reply, failed to send entire reply"},
-				&logging.KeyValue{"bytesSent", bytesSent},
-				&logging.KeyValue{"totalBytes", len(data)},
+				&logging.KV{"message", "partial reply, failed to send entire reply"},
+				&logging.KV{"bytesSent", bytesSent},
+				&logging.KV{"totalBytes", len(data)},
 			)
 		}
 		trace.RequestCompleted()
