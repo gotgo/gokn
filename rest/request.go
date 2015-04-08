@@ -12,7 +12,7 @@ type Request struct {
 	Raw        *http.Request
 	Context    *RequestContext
 	Definition ServerResource
-	Args       interface{}
+	Args       interface{} //map?
 	Body       interface{}
 	//header????
 	bodyBytes []byte
