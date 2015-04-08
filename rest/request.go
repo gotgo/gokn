@@ -56,12 +56,11 @@ func (r *Request) Bytes() ([]byte, error) {
 }
 
 func (r *Request) DecodeArgs(argValues map[string]string) error {
-	if args := r.Definition.ResourceArgs(); args != nil && len(argValues) > 0 {
-		if err := util.MapToStruct(argValues, &args); err != nil {
-			return err
-		} else {
-			r.Args = args
-		}
+	args := r.Definition.ResourceArgs()
+	r.Args = args
+
+	if args != nil && len(argValues) > 0 {
+		return util.MapToStruct(argValues, &args)
 	}
 	return nil
 }
